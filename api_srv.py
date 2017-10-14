@@ -27,11 +27,12 @@ def index():
 @app.route('/gas', methods=['GET'])
 def gas():
     msg_array = []
-    query_str = 'select POINT_NM from daeduck where ALARM_YN = 1'
+    query_str = 'select POINT_NM,FILE_NM from daeduck where ALARM_YN = 1'
     engine = db.get_engine(bind='gas')
     result = engine.execute(query_str)
-    for row in result:
-        print('row = %r' % row)
+    for record in result:
+        app.logger.debug('row = %r' % record)
+        msg_array.append(get_leak_detail(record))
     msg_short = ""
     if msg_array:
         msg_short = '#'.join(msg_array)
@@ -39,6 +40,12 @@ def gas():
         app.logger.debug("no gas alarm found in mssql database")
     return msg_short, 200
 
+def get_leak_detail(record):
+   #get leak sensor id
+   tmp = record[0].split('-')
+   sensor_id = "leak%s-%s" % (tmp[1], tmp[0][1:])
+   sensor_detail = "%s|%s" % (sensor_id, record[1][4:][:-4])
+   return sensor_detail
 
 if __name__ == '__main__':
     LOG_FILENAME = './daeduck_api_srv.log'

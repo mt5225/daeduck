@@ -18,9 +18,9 @@ logger.addHandler(handler)
 # global settings
 #_HOST = '192.168.0.150'
 _HOST = 'localhost'
-_PORT = 1470
+_PORT = 4378
 # all time value are in seconds
-_RECV_TIMEOUT = 1 * 5
+_RECV_TIMEOUT = 1 * 60
 _SOCK_POLLING = _RECV_TIMEOUT + 1
 
 def fetch_data():
