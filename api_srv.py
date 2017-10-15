@@ -24,6 +24,11 @@ db = SQLAlchemy(app)
 def index():
     return jsonify(msg='Hello, Daeduck!'), 200
 
+@app.route('/fire', methods=['GET'])
+def fire():
+    app.logger.debug("no fire alarm found in mssql database")
+    return "",200
+
 @app.route('/gas', methods=['GET'])
 def gas():
     msg_array = []
@@ -37,7 +42,7 @@ def gas():
     if msg_array:
         msg_short = '#'.join(msg_array)
     else:
-        app.logger.debug("no gas alarm found in mssql database")
+        app.logger.debug("no gas leak alarm found in mssql database")
     return msg_short, 200
 
 def get_leak_detail(record):
