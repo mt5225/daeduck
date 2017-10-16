@@ -12,7 +12,7 @@ _PORT = 4378
       
 
 #list of sample message files
-_MSG_LST = ['msg01.bin', 'msg02.bin', 'msg03.bin', 'msg04.bin']
+_MSG_LST = ['msg01.bin', 'msg02.bin']
 
 if __name__ == '__main__':
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,7 +26,7 @@ if __name__ == '__main__':
         for item in _MSG_LST:
             with open("./data/" + item, "rb") as binary_file:
                 buf = binary_file.read()
-                wait_time = random.randint(5,20)
+                wait_time = random.randint(2,5)
                 logging.debug("wait for %d seconds" % wait_time)
                 time.sleep(wait_time)
                 logging.info("send sample message [%s]" % item)

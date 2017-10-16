@@ -22,14 +22,14 @@ logger.addHandler(handler)
 _HOST = 'localhost'
 _PORT = 4378
 # all time value are in seconds
-_RECV_TIMEOUT = 1 * 60
+_RECV_TIMEOUT = 1 * 10
 _SOCK_POLLING = _RECV_TIMEOUT + 1
 _CLEAN_DB_PERIOD = 60 * 60
 
 def get_sensor_id(msg):
-    sensor_id_hex = msg[20:34]
+    sensor_id_hex = msg[22:34]
     str_buf = ''
-    for index in range(0,14,2):
+    for index in range(0,12,2):
         hex_str = sensor_id_hex[index:index+2]
         ascii_str = binascii.unhexlify(hex_str)
         str_buf = str_buf + ascii_str

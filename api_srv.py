@@ -20,14 +20,26 @@ app.config['SQLALCHEMY_BINDS'] = {
 }
 db = SQLAlchemy(app)
 
+# init lookup map
+_FIRE_LOOKUP = pd.read_csv('fire_building_mapping.csv', dtype={'ID': object})
+
 @app.route('/')
 def index():
     return jsonify(msg='Hello, Daeduck!'), 200
 
 @app.route('/fire', methods=['GET'])
 def fire():
-    app.logger.debug("no fire alarm found in mssql database")
-    return "",200
+    msg_array = []
+    result = db.engine.execute("SELECT * FROM alarms ORDER BY ROWID")
+    for row in result:
+        sensor_id = row[1][1:]
+        app.logger.debug("look for location info of sensor %s" % sensor_id)
+        df = _FIRE_LOOKUP.loc[_FIRE_LOOKUP['ID'] == sensor_id]
+        location_info = "%s_%s" % (df.iloc[0].Building, df.iloc[0].Floor)
+        msg_array.append("%s|%s|%s"% (row[0], row[1], location_info))
+    app.logger.debug(msg_array)
+    msg_short = '#'.join(msg_array) if msg_array > 0 else ""
+    return msg_short, 200
 
 @app.route('/gas', methods=['GET'])
 def gas():

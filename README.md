@@ -7,10 +7,13 @@
   - `tsql -H 192.168.86.58 -p 1433 -U admin -P admin`
 
 ## test api service
-  - for gas: `curl -i -X GET http://localhost:9006/gas`
+  - gas: `curl -i -X GET http://localhost:9006/gas`
   returns:
   `leak1-06|A_1F#leak1-08|A_1F#leak1-13|`
 
+  - fire: `curl -i -X GET http://localhost:9006/fire`
+  returns:
+  `2017-10-16 00:07:35|F0110052#2017-10-16 00:07:48|F0110052#2017-10-16 00:07:58|F0110052#2017-10-16 00:08:09|F0110052`
 
 
 ## other notes
@@ -27,6 +30,4 @@
 - operatio status: `01`
 - Panel: `30 31`=[string]=> `01` in ascii
 - Sensor ID: `30 31 313030353200`  =[string]=> `01 100520` =[last 6 digit]=> `100520`
-
-41 05 110a0b0c3929 0030313030303030303000000000000000000000000000000000000000000000c1d6c0bdc7e2204b455900000000000000000000000000c7d8c1a60000000000
           
