@@ -189,7 +189,6 @@ function update_gas_alarm_table(flyObjString) {
 			util.setTimeout(function () {
 				gasObj.setColorFlash(true, Color.red, 2.5);
 				show_banner(gasObj);
-				T_Live_Gas_Alarm[gasObj.getProperty("name")] = gasObj;
 				//check if have flied once and only fly to first gas sensor
 				var if_fly = string.contains(flyObjString, gasObj.getProperty("name"))
 				if (table.containskey(T_Fly_List, gasObj.getProperty("name")) == false && if_fly == true) {
