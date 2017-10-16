@@ -6,6 +6,7 @@ from logging.handlers import RotatingFileHandler
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from types import NoneType
+from time import gmtime, strftime
 import pandas as pd
 
 DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
@@ -61,7 +62,8 @@ def get_leak_detail(record):
    #get leak sensor id
    tmp = record[0].split('-')
    sensor_id = "leak%s-%s" % (tmp[1], tmp[0][1:])
-   sensor_detail = "%s|%s" % (sensor_id, record[1][4:][:-4])
+   occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+   sensor_detail = "%s|%s|%s" % (occr, sensor_id, record[1][4:][:-4])
    return sensor_detail
 
 if __name__ == '__main__':

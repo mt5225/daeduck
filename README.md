@@ -29,5 +29,5 @@
 `11 0a 0b 0c 39 29`==> 17 year/ 10 month/ 11 day / 12 hr / 57 min / 41 sec
 - operatio status: `01`
 - Panel: `30 31`=[string]=> `01` in ascii
-- Sensor ID: `30 31 313030353200`  =[string]=> `01 100520` =[last 6 digit]=> `100520`
+- Sensor ID: `30 313130303532`  =[string]=> `0 110052` =[last 6 digit]=> `110052`
           
