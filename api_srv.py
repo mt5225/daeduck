@@ -63,7 +63,7 @@ def get_leak_detail(record):
    tmp = record[0].split('-')
    sensor_id = "leak%s-%s" % (tmp[1], tmp[0][1:])
    occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-   sensor_detail = "%s|%s|%s" % (occr, sensor_id, record[1][4:][:-4])
+   sensor_detail = "%s|%s|P2%s" % (occr, sensor_id, record[1][4:][:-4])
    return sensor_detail
 
 if __name__ == '__main__':
