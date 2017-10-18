@@ -25,6 +25,7 @@ db = SQLAlchemy(app)
 # init lookup map
 _FIRE_LOOKUP = pd.read_csv('fire_building_mapping.csv', dtype={'ID': object})
 _FIRE_CCTV_LOOKUP = pd.read_csv('fire_cctv_mapping.csv', dtype={'ID': object})
+_GAS_CCTV_LOOKUP = pd.read_csv('gas_cctv_mapping.csv', dtype={'ID': object})
 
 @app.route('/')
 def index():
@@ -75,12 +76,19 @@ def gas():
     return msg_short, 200
 
 def get_leak_detail(record):
-   #get leak sensor id
-   tmp = record[0].split('-')
-   sensor_id = "leak%s-%s" % (tmp[1], tmp[0][1:])
-   occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-   sensor_detail = "%s|%s|P2%s" % (occr, sensor_id, record[1][4:][:-4])
-   return sensor_detail
+    # get leak sensor id
+    tmp = record[0].split('-')
+    sensor_id = "leak%s-%s" % (tmp[1].strip(), tmp[0][1:].strip())
+    occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    # get location info
+    location_info = "P2%s" %  record[1][4:][:-4]
+   
+    # get cctv info
+    sensor_id_lookup = "%s-%s" % (tmp[1].strip(), tmp[0][1:].strip())
+    df = _GAS_CCTV_LOOKUP.loc[_GAS_CCTV_LOOKUP['ID'] == sensor_id_lookup]
+    cctv_info = "%s_%s_%s_%s" % (df.iloc[0].CCTV1, df.iloc[0].CCTV2, df.iloc[0].CCTV3,df.iloc[0].CCTV4)
+    sensor_detail = "%s|%s|%s|%s" % (occr, sensor_id,location_info, cctv_info)
+    return sensor_detail
 
 if __name__ == '__main__':
     LOG_FILENAME = './daeduck_api_srv.log'
