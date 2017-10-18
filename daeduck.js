@@ -119,6 +119,13 @@ function fly_to_sensor_level(sensorObj) {
 				level.change(floor);
 		}, 100);
 	}, 100);
+	//show nearby camera
+	var tmpArray = string.split(sensorObj.getProperty('camStr'), "_");
+	for (var i = 0; i < array.count(tmpArray); i++) {
+		if (tmpArray[i] != 'nan') {
+		open_camera_live_feed(tmpArray[i])
+	}
+	}
 }
 
 
@@ -153,6 +160,7 @@ function update_fire_alarm_table() {
 			fireObj.addProperty("occurance", t[0]);
 			fireObj.addProperty("name", item);
 			fireObj.addProperty("location", t[2]);
+			fireObj.addProperty("camStr", t[3]);
 			util.setTimeout(function () {
 				show_banner(fireObj);
 				fireObj.setColorFlash(true, Color.red, 2.5);
@@ -174,11 +182,14 @@ function update_gas_alarm_table(flyObjString) {
 			gasObj.addProperty("location", t[2]);
 			gasObj.addProperty("name", item);
 			gasObj.addProperty("occurance", t[0]);
+			gasObj.addProperty("camStr", t[3]);
 			util.setTimeout(function () {
 				gasObj.setColorFlash(true, Color.red, 2.5);
 				show_banner(gasObj);
 				T_Live_Gas_Alarm[gasObj.getProperty("name")] = gasObj;
+				///////////////////////////////////////////////////////////////
 				//check if have flied once and only fly to first gas sensor
+				//////////////////////////////////////////////////////////////
 				var if_fly = string.contains(flyObjString, gasObj.getProperty("name"))
 				if (table.containskey(T_Fly_List, gasObj.getProperty("name")) == false && if_fly == true) {
 					fly_to_sensor_level(gasObj);
@@ -198,7 +209,6 @@ gui.createButton("Listen", Rect(40, 220, 60, 30), function () {
 		util.setInterval(function () {
 			if (LISTENING) {
 				//polling for fire information
-				//msg format: 2017-10-16 06:23:07|F110052|P2B_2F#2017-10-16 06:23:21|F110052|P2B_2F#2017-10-16 06:23:30|F110052|P2B_2F
 				util.download({
 					"url": BASE_URL + "fire",
 					"type": "text",
@@ -219,7 +229,6 @@ gui.createButton("Listen", Rect(40, 220, 60, 30), function () {
 					}
 				});
 				//polling for gas information
-				// message format: 2017-10-16 16:56:48|leak1-28|A_3F#2017-10-16 16:56:48|leak3-29|A_3F#2017-10-16 16:56:48|leak3-61|B_2F
 				util.download({
 					"url": BASE_URL + "gas",
 					"type": "text",
