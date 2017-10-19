@@ -37,7 +37,14 @@ def dummy_fire():
     '''
     occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     db.engine.execute("INSERT INTO alarms VALUES ('%s', '%s')" % (occr, DUMMY_FIRE))
-    return 'Okey', 200
+    return 'Fire', 200
+
+@app.route('/clear_fire_alarm', methods=['GET'])
+def clean_fire():
+    ''' clear all fire alarms
+    '''
+    db.engine.execute("delete from alarms")
+    return 'Ready', 200
 
 
 @app.route('/fire', methods=['GET'])
