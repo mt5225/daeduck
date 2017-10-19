@@ -11,6 +11,7 @@ var BASE_URL = "http://192.168.86.24:9006/";
 //var BASE_URL = "http://192.168.236.1:9006/";
 var T_Banner_List = {};
 var T_Fly_List = {}
+var F_fireObject = null;
 
 // create listenning sign
 var objSign = gui.createLabel("<color=red>IDLE</color>", Rect(5, 38, 120, 30));
@@ -108,26 +109,33 @@ function fly_to_object(obj) {
 
 //fly to sensor level
 function fly_to_sensor_level(sensorObj) {
-	var location_array = string.split(sensorObj.getProperty('location'), '_')
-		var building_name = location_array[0]
-		var building = world.buildingList.get_Item(get_building_index_by_name(building_name));
+	var location_array = string.split(sensorObj.getProperty('location'), '_');
+	var building_name = location_array[0];
+	var building = world.buildingList.get_Item(get_building_index_by_name(building_name));
 	util.setTimeout(function () {
 		level.change(building);
 		util.setTimeout(function () {
-			var floor_index = get_floor_by_name(building_name, sensorObj.getProperty("location"))
-				var floor = building.planList.get_Item(floor_index)
-				level.change(floor);
-		}, 100);
+			var floor_index = get_floor_by_name(building_name, sensorObj.getProperty("location"));
+			var floor = building.planList.get_Item(floor_index);
+			level.change(floor);
+			util.setTimeout(function () {
+				//show real fire
+				if (string.startswith(sensorObj.getProperty('name'), 'F')) {
+					F_fireObject = object.create("4483E64D87BA49F8AA9AAA693194A541",sensorObj, Vector3(0,-1,0) );
+				}
+			}, 500);
+
+		}, 500);
 	}, 100);
+
 	//show nearby camera
 	var tmpArray = string.split(sensorObj.getProperty('camStr'), "_");
 	for (var i = 0; i < array.count(tmpArray); i++) {
 		if (tmpArray[i] != 'nan') {
-		open_camera_live_feed(tmpArray[i])
-	}
+			open_camera_live_feed(tmpArray[i])
+		}
 	}
 }
-
 
 //open camera live feed
 function open_camera_live_feed(objId) {
@@ -191,10 +199,10 @@ function update_gas_alarm_table(flyObjString) {
 				//check if have flied once and only fly to first gas sensor
 				//////////////////////////////////////////////////////////////
 				var if_fly = string.contains(flyObjString, gasObj.getProperty("name"))
-				if (table.containskey(T_Fly_List, gasObj.getProperty("name")) == false && if_fly == true) {
-					fly_to_sensor_level(gasObj);
-					T_Fly_List[gasObj.getProperty("name")] = gasObj;
-				}
+					if (table.containskey(T_Fly_List, gasObj.getProperty("name")) == false && if_fly == true) {
+						fly_to_sensor_level(gasObj);
+						T_Fly_List[gasObj.getProperty("name")] = gasObj;
+					}
 			}, 1000);
 
 		}
@@ -233,7 +241,7 @@ gui.createButton("Listen", Rect(40, 220, 60, 30), function () {
 					"url": BASE_URL + "gas",
 					"type": "text",
 					"success": function (rs) {
-						if (string.length(rs) > 10) {
+						if (string.length(rs) > 10000) {
 							rs = string.trim(rs);
 							var msgArray = string.split(rs, "#");
 							for (var i = 0; i < array.count(msgArray); i++) {
@@ -280,5 +288,6 @@ gui.createButton("Reset", Rect(40, 260, 60, 30), function () {
 		}
 	});
 	gui.destroy(objSign);
+	F_fireObject.destroy();
 	objSign = gui.createLabel("<color=red>IDLE</color>", Rect(5, 38, 120, 30));
 });
