@@ -7,9 +7,10 @@
   - `tsql -H 192.168.86.58 -p 1433 -U admin -P admin`
 
 ## test api service
+  - common format:  `[timestamp]|[sensor_id]|[location]|[camera_list]#`
   - gas: `curl -i -X GET http://localhost:9006/gas`
   returns:
-  `leak1-06|A_1F#leak1-08|A_1F#leak1-13|`
+  `2017-10-20 15:29:47|leak1-71|P2A_BACK|C119_C102_C102_C81`
 
   - fire: `curl -i -X GET http://localhost:9006/fire`
   returns:
