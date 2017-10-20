@@ -12,6 +12,8 @@ var BASE_URL = "http://192.168.86.24:9006/";
 var T_Banner_List = {};
 var T_Fly_List = {}
 var F_fireObject = null;
+var SHOW_GAS = false;
+var SHOW_FIRE = true;
 
 // create listenning sign
 var objSign = gui.createLabel("<color=red>IDLE</color>", Rect(5, 38, 120, 30));
@@ -120,8 +122,8 @@ function fly_to_sensor_level(sensorObj) {
 			level.change(floor);
 			util.setTimeout(function () {
 				//show real fire
-				if (string.startswith(sensorObj.getProperty('name'), 'F')) {
-					F_fireObject = object.create("4483E64D87BA49F8AA9AAA693194A541",sensorObj, Vector3(0,-1,0) );
+				if (sensorObj.getProperty("source") == "fire") {
+					F_fireObject = object.create("4483E64D87BA49F8AA9AAA693194A541", sensorObj, Vector3(0, -1, 0));
 				}
 			}, 500);
 
@@ -169,6 +171,7 @@ function update_fire_alarm_table() {
 			fireObj.addProperty("name", item);
 			fireObj.addProperty("location", t[2]);
 			fireObj.addProperty("camStr", t[3]);
+			fireObj.addProperty("source", "fire");
 			util.setTimeout(function () {
 				show_banner(fireObj);
 				fireObj.setColorFlash(true, Color.red, 2.5);
@@ -191,6 +194,7 @@ function update_gas_alarm_table(flyObjString) {
 			gasObj.addProperty("name", item);
 			gasObj.addProperty("occurance", t[0]);
 			gasObj.addProperty("camStr", t[3]);
+			gasObj.addProperty("source", "gas");
 			util.setTimeout(function () {
 				gasObj.setColorFlash(true, Color.red, 2.5);
 				show_banner(gasObj);
@@ -217,47 +221,51 @@ gui.createButton("Listen", Rect(40, 220, 60, 30), function () {
 		util.setInterval(function () {
 			if (LISTENING) {
 				//polling for fire information
-				util.download({
-					"url": BASE_URL + "fire",
-					"type": "text",
-					"success": function (rs) {
-						if (string.length(rs) > 10) {
-							rs = string.trim(rs);
-							var msgArray = string.split(rs, "#");
-							for (var i = 0; i < array.count(msgArray); i++) {
-								tmpArray = string.split(msgArray[i], "|");
-								T_Live_Fire_Alarm[tmpArray[1]] = msgArray[i];
+				if (SHOW_FIRE == true) {
+					util.download({
+						"url": BASE_URL + "fire",
+						"type": "text",
+						"success": function (rs) {
+							if (string.length(rs) > 10) {
+								rs = string.trim(rs);
+								var msgArray = string.split(rs, "#");
+								for (var i = 0; i < array.count(msgArray); i++) {
+									tmpArray = string.split(msgArray[i], "|");
+									T_Live_Fire_Alarm[tmpArray[1]] = msgArray[i];
+								}
+								update_fire_alarm_table();
 							}
-							update_fire_alarm_table();
-						}
 
-					},
-					"error": function (t) {
-						print(t);
-					}
-				});
-				//polling for gas information
-				util.download({
-					"url": BASE_URL + "gas",
-					"type": "text",
-					"success": function (rs) {
-						if (string.length(rs) > 10000) {
-							rs = string.trim(rs);
-							var msgArray = string.split(rs, "#");
-							for (var i = 0; i < array.count(msgArray); i++) {
-								var tmpArray = string.split(msgArray[i], "|");
-								T_Live_Gas_Alarm[tmpArray[1]] = msgArray[i];
-							}
-							update_gas_alarm_table(msgArray[0]);
-						} else {
-							//no gas alarms, clear alarm array
-							remove_all_gas_alarm();
+						},
+						"error": function (t) {
+							print(t);
 						}
-					},
-					"error": function (t) {
-						print(t);
-					}
-				});
+					});
+				}
+				//polling for gas information
+				if (SHOW_GAS == true) {
+					util.download({
+						"url": BASE_URL + "gas",
+						"type": "text",
+						"success": function (rs) {
+							if (string.length(rs) > 10) {
+								rs = string.trim(rs);
+								var msgArray = string.split(rs, "#");
+								for (var i = 0; i < array.count(msgArray); i++) {
+									var tmpArray = string.split(msgArray[i], "|");
+									T_Live_Gas_Alarm[tmpArray[1]] = msgArray[i];
+								}
+								update_gas_alarm_table(msgArray[0]);
+							} else {
+								//no gas alarms, clear alarm array
+								remove_all_gas_alarm();
+							}
+						},
+						"error": function (t) {
+							print(t);
+						}
+					});
+				}
 			}
 		}, 3000);
 	}
