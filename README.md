@@ -8,18 +8,17 @@
 
 ## test api service
   - common format:  `[timestamp]|[sensor_id]|[location]|[camera_list]#`
-  - gas: `curl -i -X GET http://localhost:9006/gas`
-  returns:
-  `2017-10-20 15:29:47|leak1-71|P2A_BACK|C119_C102_C102_C81`
 
-  - fire: `curl -i -X GET http://localhost:9006/fire`
-  returns:
-  `2017-10-18 18:02:01|F100311|P2A_1F|C95_C96_C93_C97`
+  - gas: `curl -i -X GET http://localhost:9006/gas`  
+  returns:  `2017-10-20 15:29:47|leak1-71|P2A_BACK|C119_C102_C102_C81`
+
+  - fire: `curl -i -X GET http://localhost:9006/fire`  
+  returns: `2017-10-18 18:02:01|F100311|P2A_1F|C95_C96_C93_C97`
 
 
 ## other notes
   - naming of leak sensor:  `leak1-10`, from mssql
-  - name of fire sensor:  `F100431`, from socket server
+  - naming of fire sensor:  `F100431`, from socket server
 
 ## msg format
 
