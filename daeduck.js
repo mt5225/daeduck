@@ -10,10 +10,11 @@ var CURRENT_LEVEL = 'world';
 var BASE_URL = "http://192.168.86.24:9006/";
 //var BASE_URL = "http://192.168.236.1:9006/";
 var T_Banner_List = {};
-var T_Fly_List = {}
-var F_fireObject = null;
-var SHOW_GAS = false;
-var SHOW_FIRE = true;
+var T_Fly_List = {};
+var T_Fire_List = {};
+var T_Gas_List = {};
+var SHOW_GAS = true;
+var SHOW_FIRE = false;
 
 // create listenning sign
 var objSign = gui.createLabel("<color=red>IDLE</color>", Rect(5, 38, 120, 30));
@@ -69,7 +70,7 @@ function get_floor_by_name(building_name, obj_name) {
 }
 
 //show banner on top of object
-function show_banner(obj) {
+function show_banner_and_effect(obj) {
 	if (T_Banner_List[obj.getProperty("name")] == null) {
 		util.download({
 			"url": BASE_URL + "outline_button.bundle",
@@ -93,6 +94,17 @@ function show_banner(obj) {
 				T_Banner_List[obj.getProperty("name")] = banner_ui;
 			}
 		});
+		util.setTimeout(function () {
+			//show real fire
+			if (obj.getProperty("source") == "fire") {
+				var fireEffectObject = object.create("4483E64D87BA49F8AA9AAA693194A541", obj, Vector3(0, -1, 0));
+				T_Fire_List[obj.getProperty("name")] = fireEffectObject;
+			}
+			if (obj.getProperty("source") == "gas") {
+				var gasEffectObject = object.create("4C818E5DF22C429FA73B47F88DBCD7BA", obj, Vector3(0, -1, 0));
+				T_Gas_List[obj.getProperty("name")] = gasEffectObject;
+			}
+		}, 500);
 	}
 }
 
@@ -114,22 +126,30 @@ function fly_to_sensor_level(sensorObj) {
 	var location_array = string.split(sensorObj.getProperty('location'), '_');
 	var building_name = location_array[0];
 	var building = world.buildingList.get_Item(get_building_index_by_name(building_name));
-	util.setTimeout(function () {
-		level.change(building);
+	var if_campus = string.contains(sensorObj.getProperty('location'), "BACK");
+	if (if_campus == true) {
+		camera.flyTo({
+			"eye": Vector3(-80, 120, -50),
+			"target": sensorObj.pos,
+			"time": 1,
+			"complete": function () {
+				LISTENING = false;
+				util.setTimeout(function () {
+					CURRENT_LEVEL = 'world';
+					level.change(world);
+				}, 500);
+			}
+		});
+	} else {
 		util.setTimeout(function () {
-			var floor_index = get_floor_by_name(building_name, sensorObj.getProperty("location"));
-			var floor = building.planList.get_Item(floor_index);
-			level.change(floor);
+			level.change(building);
 			util.setTimeout(function () {
-				//show real fire
-				if (sensorObj.getProperty("source") == "fire") {
-					F_fireObject = object.create("4483E64D87BA49F8AA9AAA693194A541", sensorObj, Vector3(0, -1, 0));
-				}
+				var floor_index = get_floor_by_name(building_name, sensorObj.getProperty("location"));
+				var floor = building.planList.get_Item(floor_index);
+				level.change(floor);
 			}, 500);
-
 		}, 500);
-	}, 100);
-
+	}
 	//show nearby camera
 	var tmpArray = string.split(sensorObj.getProperty('camStr'), "_");
 	for (var i = 0; i < array.count(tmpArray); i++) {
@@ -145,7 +165,7 @@ function open_camera_live_feed(objId) {
 	if (camObj != null) {
 		util.setTimeout(function () {
 			selector.select(camObj);
-		}, 1000);
+		}, 3000);
 	}
 }
 
@@ -173,7 +193,7 @@ function update_fire_alarm_table() {
 			fireObj.addProperty("camStr", t[3]);
 			fireObj.addProperty("source", "fire");
 			util.setTimeout(function () {
-				show_banner(fireObj);
+				show_banner_and_effect(fireObj);
 				fireObj.setColorFlash(true, Color.red, 2.5);
 				if (table.containskey(T_Fly_List, fireObj.getProperty("name")) == false) {
 					fly_to_sensor_level(fireObj);
@@ -197,7 +217,7 @@ function update_gas_alarm_table(flyObjString) {
 			gasObj.addProperty("source", "gas");
 			util.setTimeout(function () {
 				gasObj.setColorFlash(true, Color.red, 2.5);
-				show_banner(gasObj);
+				show_banner_and_effect(gasObj);
 				T_Live_Gas_Alarm[gasObj.getProperty("name")] = gasObj;
 				///////////////////////////////////////////////////////////////
 				//check if have flied once and only fly to first gas sensor
@@ -270,14 +290,23 @@ gui.createButton("Listen", Rect(40, 220, 60, 30), function () {
 	}
 });
 
+function destoy_elements(T_Object_List) {
+	foreach(var item in vpairs(table.keys(T_Object_List))) {
+		if (T_Object_List[item] != null) {
+			T_Object_List[item].destroy();
+		}
+	}
+
+}
+
 gui.createButton("Reset", Rect(40, 260, 60, 30), function () {
 	util.clearAllTimers();
 	selector.ClearSelection();
-	foreach(var item in vpairs(table.keys(T_Banner_List))) {
-		if (T_Banner_List[item] != null) {
-			T_Banner_List[item].destroy();
-		}
-	}
+	//remove all existing banners and effects
+	destoy_elements(T_Banner_List);
+	destoy_elements(T_Fire_List);
+	destoy_elements(T_Gas_List);
+
 	camera.flyTo({
 		"eye": Vector3(-80, 80, -50),
 		"target": Vector3(3, 4, 5),
@@ -295,8 +324,5 @@ gui.createButton("Reset", Rect(40, 260, 60, 30), function () {
 		}
 	});
 	gui.destroy(objSign);
-	if (F_fireObject != null) {
-		F_fireObject.destroy();
-	}
 	objSign = gui.createLabel("<color=red>IDLE</color>", Rect(5, 38, 120, 30));
 });
