@@ -202,11 +202,11 @@ function update_gas_alarm_table(flyObjString) {
 				///////////////////////////////////////////////////////////////
 				//check if have flied once and only fly to first gas sensor
 				//////////////////////////////////////////////////////////////
-				var if_fly = string.contains(flyObjString, gasObj.getProperty("name"))
-					if (table.containskey(T_Fly_List, gasObj.getProperty("name")) == false && if_fly == true) {
-						fly_to_sensor_level(gasObj);
-						T_Fly_List[gasObj.getProperty("name")] = gasObj;
-					}
+				var if_fly = string.contains(flyObjString, gasObj.getProperty("name"));
+				if (table.containskey(T_Fly_List, gasObj.getProperty("name")) == false && if_fly == true) {
+					fly_to_sensor_level(gasObj);
+					T_Fly_List[gasObj.getProperty("name")] = gasObj;
+				}
 			}, 1000);
 
 		}
@@ -235,7 +235,6 @@ gui.createButton("Listen", Rect(40, 220, 60, 30), function () {
 								}
 								update_fire_alarm_table();
 							}
-
 						},
 						"error": function (t) {
 							print(t);
@@ -296,6 +295,8 @@ gui.createButton("Reset", Rect(40, 260, 60, 30), function () {
 		}
 	});
 	gui.destroy(objSign);
-	F_fireObject.destroy();
+	if (F_fireObject != null) {
+		F_fireObject.destroy();
+	}
 	objSign = gui.createLabel("<color=red>IDLE</color>", Rect(5, 38, 120, 30));
 });
