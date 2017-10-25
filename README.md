@@ -15,10 +15,13 @@
   - fire: `curl -i -X GET http://localhost:9006/fire`  
   returns: `2017-10-18 18:02:01|F100311|P2A_1F|C95_C96_C93_C97`
 
+  - simulate fire alarm: `http://192.168.86.24:9006/sim_fire.html`
+
 
 ## other notes
   - naming of leak sensor:  `leak1-10`, from mssql
   - naming of fire sensor:  `F100431`, from socket server
+  - clean db every 20 minutes
 
 ## msg format
 
@@ -31,3 +34,4 @@
 - Panel: `30 31`=[string]=> `01` in ascii
 - Sensor ID: `30 313130303532`  =[string]=> `0 110052` =[last 6 digit]=> `110052`
           
+        

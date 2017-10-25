@@ -24,7 +24,7 @@ _PORT = 4378
 # all time value are in seconds
 _RECV_TIMEOUT = 1 * 10
 _SOCK_POLLING = _RECV_TIMEOUT + 1
-_CLEAN_DB_PERIOD = 60 * 60
+_CLEAN_DB_PERIOD = 20 * 60
 
 def get_sensor_id(msg):
     sensor_id_hex = msg[22:34]
