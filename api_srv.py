@@ -85,13 +85,16 @@ def gas():
 def get_leak_detail(record):
     # get leak sensor id
     tmp = record[0].split('-')
-    sensor_id = "leak%s-%s" % (tmp[1].strip(), tmp[0][1:].strip())
+    second = tmp[0][2] if tmp[0][:2] == '00' else tmp[0][1:].strip()  
+    sensor_id = "leak%s-%s" % (tmp[1].strip(), second)
+    app.logger.debug('sensor_id = %s' % sensor_id)
     occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     # get location info
     location_info = "P2%s" %  record[1][4:][:-4]
    
     # get cctv info
-    sensor_id_lookup = "%s-%s" % (tmp[1].strip(), tmp[0][1:].strip())
+    sensor_id_lookup = "%s-%s" % (tmp[1].strip(), second)
+    app.logger.debug('sensor_lookup_id = %s' % sensor_id_lookup)
     df = _GAS_CCTV_LOOKUP.loc[_GAS_CCTV_LOOKUP['ID'] == sensor_id_lookup]
     cctv_info = "%s_%s_%s_%s" % (df.iloc[0].CCTV1, df.iloc[0].CCTV2, df.iloc[0].CCTV3,df.iloc[0].CCTV4)
     sensor_detail = "%s|%s|%s|%s" % (occr, sensor_id,location_info, cctv_info)
