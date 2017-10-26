@@ -9,6 +9,7 @@ from types import NoneType
 from time import gmtime, strftime
 import pandas as pd
 
+DB_TABLE_NAME = 'daeduck'
 DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
 DUMMY_FIRE = 'F100311'
 
@@ -69,7 +70,7 @@ def fire():
 @app.route('/gas', methods=['GET'])
 def gas():
     msg_array = []
-    query_str = 'select POINT_NM,FILE_NM from daeduck where ALARM_YN = 1'
+    query_str = 'select POINT_NM,FILE_NM from %s where ALARM_YN = 1' % DB_TABLE_NAME
     engine = db.get_engine(bind='gas')
     result = engine.execute(query_str)
     for record in result:
