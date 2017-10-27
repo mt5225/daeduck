@@ -220,7 +220,6 @@ function update_gas_alarm_table(flyObjString) {
 				util.setTimeout(function () {
 					gasObj.setColorFlash(true, Color.red, 2.5);
 					show_banner_and_effect(gasObj);
-					T_Live_Gas_Alarm[gasObj.getProperty("name")] = gasObj;
 					///////////////////////////////////////////////////////////////
 					//check if have flied once and only fly to first gas sensor
 					//////////////////////////////////////////////////////////////
@@ -232,6 +231,28 @@ function update_gas_alarm_table(flyObjString) {
 				}, 1000);
 			}
 
+		}
+	}
+}
+
+function remove_recovery_gas_alarm(msgArray) {
+	foreach(var item in vpairs(table.keys(T_Live_Gas_Alarm))) {
+		var recovery = true;
+		for (var i = 0; i < array.count(msgArray); i++) {
+			if(string.contains(msgArray[i], item)) {
+				recovery = false;
+			}
+		}
+		if(recovery == true) {
+			var messageObj = gui.createLabel("<color=red>" + item + " recoveried!</color>", Rect(150, 38, 200, 30));
+			table.remove(T_Live_Gas_Alarm, item);
+			util.setTimeout(function () {
+				gui.destroy(messageObj);
+				destory_element_by_name(T_Banner_List, item);
+			    destory_element_by_name(T_Gas_List, item);
+				var obj = object.find(item);
+		        obj.setColorFlash(false);
+			}, 3000);
 		}
 	}
 }
@@ -273,6 +294,7 @@ gui.createButton("Listen", Rect(40, 220, 60, 30), function () {
 							if (string.length(rs) > 10) {
 								rs = string.trim(rs);
 								var msgArray = string.split(rs, "#");
+								remove_recovery_gas_alarm(msgArray);
 								for (var i = 0; i < array.count(msgArray); i++) {
 									var tmpArray = string.split(msgArray[i], "|");
 									T_Live_Gas_Alarm[tmpArray[1]] = msgArray[i];
@@ -297,18 +319,46 @@ function destoy_elements(T_Object_List) {
 	foreach(var item in vpairs(table.keys(T_Object_List))) {
 		if (T_Object_List[item] != null) {
 			T_Object_List[item].destroy();
+			
 		}
 	}
-
 }
+
+function destory_element_by_name(T_Object_List, objName) {
+	foreach(var item in vpairs(table.keys(T_Object_List))) {
+		if (item == objName && T_Object_List[item] != null) {
+			T_Object_List[item].destroy();
+			table.remove(T_Object_List, item);
+		}
+	}
+}
+
+function stop_all_flash(){
+	foreach(var item in vpairs(table.keys(T_Live_Fire_Alarm))) {
+		var obj = object.find(item);
+		if (obj != null) {
+			obj.setColorFlash(false);		
+		}
+	}
+	foreach(var item in vpairs(table.keys(T_Live_Gas_Alarm))) {
+		var obj = object.find(item);
+		if (obj != null) {
+			print(obj);
+			obj.setColorFlash(false);		
+		}
+	}
+}
+
 
 gui.createButton("Reset", Rect(40, 260, 60, 30), function () {
 	util.clearAllTimers();
 	selector.ClearSelection();
 	//remove all existing banners and effects
+	stop_all_flash();
 	destoy_elements(T_Banner_List);
 	destoy_elements(T_Fire_List);
 	destoy_elements(T_Gas_List);
+
 
 	camera.flyTo({
 		"eye": Vector3(-80, 80, -50),
