@@ -169,18 +169,6 @@ function open_camera_live_feed(objId) {
 	}
 }
 
-function remove_all_gas_alarm() {
-	foreach(var item in vpairs(table.keys(T_Live_Gas_Alarm))) {
-		var obj = object.find(item);
-		obj.setColorFlash(false);
-		if (T_Banner_List[item] != null) {
-			T_Banner_List[item].destroy();
-			table.remove(T_Banner_List, item);
-		}
-		table.remove(T_Fly_List, item);
-	}
-}
-
 function update_fire_alarm_table() {
 	foreach(var item in vpairs(table.keys(T_Live_Fire_Alarm))) {
 		if (string.length(T_Live_Fire_Alarm[item]) > 1) {
@@ -246,6 +234,7 @@ function remove_recovery_gas_alarm(msgArray) {
 		if(recovery == true) {
 			var messageObj = gui.createLabel("<color=red>" + item + " recoveried!</color>", Rect(150, 38, 200, 30));
 			table.remove(T_Live_Gas_Alarm, item);
+			table.remove(T_Fly_List, item);
 			util.setTimeout(function () {
 				gui.destroy(messageObj);
 				destory_element_by_name(T_Banner_List, item);
@@ -302,7 +291,7 @@ gui.createButton("Listen", Rect(40, 220, 60, 30), function () {
 								update_gas_alarm_table(msgArray[0]);
 							} else {
 								//no gas alarms, clear alarm array
-								remove_all_gas_alarm();
+								remove_recovery_gas_alarm([]);
 							}
 						},
 						"error": function (t) {
