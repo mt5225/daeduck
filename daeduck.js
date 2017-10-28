@@ -343,7 +343,6 @@ function stop_all_flash(){
 	foreach(var item in vpairs(table.keys(T_Live_Gas_Alarm))) {
 		var obj = object.find(item);
 		if (obj != null) {
-			print(obj);
 			obj.setColorFlash(false);		
 		}
 	}
