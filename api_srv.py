@@ -70,7 +70,7 @@ def fire():
 @app.route('/gas', methods=['GET'])
 def gas():
     msg_array = []
-    query_str = 'select POINT_NM,FILE_NM from %s where ALARM_YN = 1' % DB_TABLE_NAME
+    query_str = 'select POINT_NM,FILE_NM,CURR_DT from %s where ALARM_YN = 1' % DB_TABLE_NAME
     engine = db.get_engine(bind='gas')
     result = engine.execute(query_str)
     for record in result:
@@ -89,7 +89,8 @@ def get_leak_detail(record):
     second = tmp[0][2] if tmp[0][:2] == '00' else tmp[0][1:].strip()  
     sensor_id = "leak%s-%s" % (tmp[1].strip(), second)
     app.logger.debug('sensor_id = %s' % sensor_id)
-    occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    occr = record[2]
+    #occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     # get location info
     location_info = "P2%s" %  record[1][4:][:-4]
    
