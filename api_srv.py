@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sqlite3
 import logging
+import sys
 from flask import Flask, jsonify
 from logging.handlers import RotatingFileHandler
 from flask_cors import CORS
@@ -9,9 +10,8 @@ from types import NoneType
 from time import gmtime, strftime
 import pandas as pd
 
-DB_TABLE_NAME = 'UVW_POINTINFO_for_cctv'
-#DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
-DB_URL = 'mssql+pyodbc://cctv:1qaz2wsx!@#$@192.168.6.101:1433/DDEMS?driver=SQL+Server+Native+Client+11.0'
+DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
+#DB_URL = 'mssql+pyodbc://cctv:1qaz2wsx!@#$@192.168.6.101:1433/DDEMS?driver=SQL+Server+Native+Client+11.0'
 DUMMY_FIRE = 'F100311'
 
 # innit flash app and backend db connection
@@ -63,7 +63,8 @@ def fire():
         # get cctv info
         df = _FIRE_CCTV_LOOKUP.loc[_FIRE_CCTV_LOOKUP['ID'] == sensor_id]
         cctv_info = "%s_%s_%s_%s" % (df.iloc[0].CCTV1, df.iloc[0].CCTV2, df.iloc[0].CCTV3,df.iloc[0].CCTV4)
-        msg_array.append("%s|%s|%s|%s"% (row[0], row[1], location_info, cctv_info))
+        status = row[2]
+        msg_array.append("%s|%s|%s|%s|%s"% (row[0], row[1], location_info, cctv_info, status))
     app.logger.debug(msg_array)
     msg_short = '#'.join(msg_array) if msg_array > 0 else ""
     return msg_short, 200
@@ -71,7 +72,7 @@ def fire():
 @app.route('/gas', methods=['GET'])
 def gas():
     msg_array = []
-    query_str = 'select POINT_NM,FILE_NM,CURR_DT from %s where ALARM_YN = 1 ORDER BY CURR_DT desc' % DB_TABLE_NAME
+    query_str = 'select POINT_NM,FILE_NM,CURR_DT from UVW_POINTINFO_for_cctv where ALARM_YN = 1 ORDER BY CURR_DT desc'
     engine = db.get_engine(bind='gas')
     result = engine.execute(query_str)
     for record in result:
@@ -94,7 +95,6 @@ def get_leak_detail(record):
     #occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     # get location info
     location_info = "P2%s" %  record[1][4:][:-4]
-   
     # get cctv info
     sensor_id_lookup = "%s-%s" % (tmp[1].strip(), second)
     app.logger.debug('sensor_lookup_id = %s' % sensor_id_lookup)
@@ -108,7 +108,8 @@ if __name__ == '__main__':
     LOG_FILENAME = './daeduck_api_srv.log'
     formatter = logging.Formatter(
         "[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s")
-    handler = RotatingFileHandler(LOG_FILENAME, maxBytes=10000000, backupCount=5)
+    #handler = RotatingFileHandler(LOG_FILENAME, maxBytes=10000000, backupCount=5)
+    handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.DEBUG)
     handler.setFormatter(formatter)
     app.logger.addHandler(handler)

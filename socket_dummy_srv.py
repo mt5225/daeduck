@@ -12,7 +12,7 @@ _PORT = 4378
       
 
 #list of sample message files
-_MSG_LST = ['msg01.bin', 'msg02.bin']
+_MSG_LST = ['msg01.bin', 'msg02.bin', 'msg03.bin']
 
 if __name__ == '__main__':
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
