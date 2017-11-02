@@ -35,3 +35,29 @@
 2017-10-11 13:11:42,194 - __main__ - DEBUG - received 1 bytes, server sokect closed
 2017-10-11 13:11:47,197 - __main__ - DEBUG - 41
 2017-10-11 13:11:47,198 - __main__ - DEBUG - received 1 bytes, server sokect closed
+
+
+
+=== new ===
+
+2017-11-02 13:01:09,871 - __main__ - DEBUG - 4806110b020d002e003031303130313131310032462d442d31000000000000000000000000000000b9dfbdc5b1e20000000000000000000000000000000000c7d8c1a60000000000
+2017-11-02 13:01:09,871 - __main__ - INFO - not a fire alarm message, ignore
+2017-11-02 13:01:12,075 - apscheduler.scheduler - DEBUG - Looking for jobs to run
+2017-11-02 13:01:12,075 - apscheduler.scheduler - WARNING - Execution of job "fetch_data (trigger: interval[0:00:11], next run at: 2017-11-02 13:01:12 KST)" skipped: maximum number of running instances reached (1)
+2017-11-02 13:01:12,075 - apscheduler.scheduler - DEBUG - Next wakeup is due at 2017-11-02 13:01:23.074000+09:00 (in 10.999000 seconds)
+2017-11-02 13:01:14,888 - __main__ - DEBUG -
+2017-11-02 13:01:14,888 - __main__ - INFO - not a fire alarm message, ignore
+2017-11-02 13:01:14,888 - __main__ - DEBUG - 00
+2017-11-02 13:01:14,888 - __main__ - INFO - not a fire alarm message, ignore
+2017-11-02 13:01:19,888 - __main__ - DEBUG -
+2017-11-02 13:01:19,888 - __main__ - INFO - not a fire alarm message, ignore
+2017-11-02 13:01:19,888 - __main__ - DEBUG - 00
+2017-11-02 13:01:19,888 - __main__ - INFO - not a fire alarm message, ignore
+2017-11-02 13:01:20,890 - __main__ - DEBUG -
+2017-11-02 13:01:20,890 - __main__ - INFO - not a fire alarm message, ignore
+2017-11-02 13:01:20,890 - __main__ - DEBUG - 480a110b020d00390130313030303030303000000000000000000000000000000000000000000000c8adc0e720bab9b1b8204b455900000000000000000000b5bfc0db0000000000
+2017-11-02 13:01:20,890 - __main__ - INFO - not a fire alarm message, ignore
+2017-11-02 13:01:23,075 - apscheduler.scheduler - DEBUG - Looking for jobs to run
+2017-11-02 13:01:23,075 - apscheduler.scheduler - WARNING - Execution of job "fetch_data (trigger: interval[0:00:11], next run at: 2017-11-02 13:01:23 KST)" skipped: maximum number of running instances reached (1)
+2017-11-02 13:01:23,075 - apscheduler.scheduler - DEBUG - Next wakeup is due at 2017-11-02 13:01:34.074000+09:00 (in 10.999000 seconds)
+2017-11-02 13:01:25,903 - __main__ - DEBUG -

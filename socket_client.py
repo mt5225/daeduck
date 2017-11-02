@@ -46,12 +46,22 @@ def decode_message(buf):
     msg_decode = data.split('41')
     for msg in msg_decode:
         logger.debug(msg)
-        if msg[:2] == '06':
+        if msg[2:4] == '06':
             logger.warn("fire alarm message, insert into alarm database")
             msg_array.append(
                 {
                     'occurrences': strftime("%Y-%m-%d %H:%M:%S", gmtime()),
-                    'sensor': get_sensor_id(msg)
+                    'sensor': get_sensor_id(msg),
+                    'status': 'fire'
+                }
+            )
+        elif msg[2:4] == '0a':
+            logger.warn("fire recovery message, insert into alarm database")
+            msg_array.append(
+                {
+                    'occurrences': strftime("%Y-%m-%d %H:%M:%S", gmtime()),
+                    'sensor': get_sensor_id(msg),
+                    'status': 'recovery'
                 }
             )
         else:
@@ -68,8 +78,8 @@ def save_to_db(payload):
         conn = sqlite3.connect('daeduck_fire.db')
         cur = conn.cursor()
         for item in payload:
-            record = (item['occurrences'], item['sensor'])
-            cur.execute("INSERT INTO alarms VALUES(?,?)", record)
+            record = (item['occurrences'], item['sensor'], item['status'])
+            cur.execute("INSERT INTO alarms VALUES(?,?,?)", record)
         conn.commit()
     except sqlite3.Error, e:
         logging.error("Error %s:" % e.args[0])
