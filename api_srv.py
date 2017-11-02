@@ -9,8 +9,9 @@ from types import NoneType
 from time import gmtime, strftime
 import pandas as pd
 
-DB_TABLE_NAME = 'daeduck'
-DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
+DB_TABLE_NAME = 'UVW_POINTINFO_for_cctv'
+#DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
+DB_URL = 'mssql+pyodbc://cctv:1qaz2wsx!@#$@192.168.6.101:1433/DDEMS?driver=SQL+Server+Native+Client+11.0'
 DUMMY_FIRE = 'F100311'
 
 # innit flash app and backend db connection
@@ -70,7 +71,7 @@ def fire():
 @app.route('/gas', methods=['GET'])
 def gas():
     msg_array = []
-    query_str = 'select POINT_NM,FILE_NM,CURR_DT from %s where ALARM_YN = 1' % DB_TABLE_NAME
+    query_str = 'select POINT_NM,FILE_NM,CURR_DT from %s where ALARM_YN = 1 ORDER BY CURR_DT desc' % DB_TABLE_NAME
     engine = db.get_engine(bind='gas')
     result = engine.execute(query_str)
     for record in result:
@@ -100,6 +101,7 @@ def get_leak_detail(record):
     df = _GAS_CCTV_LOOKUP.loc[_GAS_CCTV_LOOKUP['ID'] == sensor_id_lookup]
     cctv_info = "%s_%s_%s_%s" % (df.iloc[0].CCTV1, df.iloc[0].CCTV2, df.iloc[0].CCTV3,df.iloc[0].CCTV4)
     sensor_detail = "%s|%s|%s|%s" % (occr, sensor_id,location_info, cctv_info)
+    app.logger.debug(sensor_detail)
     return sensor_detail
 
 if __name__ == '__main__':
