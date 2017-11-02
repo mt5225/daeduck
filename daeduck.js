@@ -14,7 +14,7 @@ var T_Fly_List = {};
 var T_Fire_List = {};
 var T_Gas_List = {};
 var SHOW_GAS = true;
-var SHOW_FIRE = false;
+var SHOW_FIRE = true;
 
 // create listenning sign
 var objSign = gui.createLabel("<color=red>IDLE</color>", Rect(5, 38, 120, 30));
@@ -98,6 +98,7 @@ function show_banner_and_effect(obj) {
 			//show real fire
 			if (obj.getProperty("source") == "fire") {
 				var fireEffectObject = object.create("4483E64D87BA49F8AA9AAA693194A541", obj, Vector3(0, -1, 0));
+				
 				T_Fire_List[obj.getProperty("name")] = fireEffectObject;
 			}
 			if (obj.getProperty("source") == "gas") {
@@ -171,7 +172,7 @@ function open_camera_live_feed(objId) {
 
 function update_fire_alarm_table() {
 	foreach(var item in vpairs(table.keys(T_Live_Fire_Alarm))) {
-		if (string.length(T_Live_Fire_Alarm[item]) > 1) {
+		if (string.contains(T_Live_Fire_Alarm[item], "fire")) {
 			var fireObj = object.find(item);
 			if (fireObj != null) {
 				fireObj.addProperty("name", item);
@@ -190,6 +191,9 @@ function update_fire_alarm_table() {
 					}
 				}, 1000);
 			}
+		} else {
+			//handle recovery fire alarms
+			remove_recovery_fire_alarm(item);
 		}
 	}
 }
@@ -227,22 +231,37 @@ function remove_recovery_gas_alarm(msgArray) {
 	foreach(var item in vpairs(table.keys(T_Live_Gas_Alarm))) {
 		var recovery = true;
 		for (var i = 0; i < array.count(msgArray); i++) {
-			if(string.contains(msgArray[i], item)) {
+			if (string.contains(msgArray[i], item)) {
 				recovery = false;
 			}
 		}
-		if(recovery == true) {
+		if (recovery == true) {
 			var messageObj = gui.createLabel("<color=red>" + item + " recoveried!</color>", Rect(150, 38, 200, 30));
 			table.remove(T_Live_Gas_Alarm, item);
 			table.remove(T_Fly_List, item);
 			util.setTimeout(function () {
 				gui.destroy(messageObj);
 				destory_element_by_name(T_Banner_List, item);
-			    destory_element_by_name(T_Gas_List, item);
+				destory_element_by_name(T_Gas_List, item);
 				var obj = object.find(item);
-		        obj.setColorFlash(false);
+				obj.setColorFlash(false);
 			}, 3000);
 		}
+	}
+}
+
+function remove_recovery_fire_alarm(item) {
+	table.remove(T_Live_Fire_Alarm, item);
+	table.remove(T_Fly_List, item);
+	destory_element_by_name(T_Banner_List, item);
+	destory_element_by_name(T_Fire_List, item);
+	var obj = object.find(item);
+	obj.setColorFlash(false);
+}
+
+function clear_all_fire_alarm() {
+	foreach(var item in vpairs(table.keys(T_Live_Fire_Alarm))) {
+		remove_recovery_fire_alarm(item)
 	}
 }
 
@@ -262,11 +281,18 @@ gui.createButton("Listen", Rect(40, 220, 60, 30), function () {
 							if (string.length(rs) > 10) {
 								rs = string.trim(rs);
 								var msgArray = string.split(rs, "#");
-								for (var i = 0; i < array.count(msgArray); i++) {
-									tmpArray = string.split(msgArray[i], "|");
-									T_Live_Fire_Alarm[tmpArray[1]] = msgArray[i];
+								// a hard recovery event with sensor id is F000000
+								if (string.contains(msgArray[array.count(msgArray) - 1], 'F000000')) {
+									clear_all_fire_alarm();
+								} else {
+									for (var i = 0; i < array.count(msgArray); i++) {
+										tmpArray = string.split(msgArray[i], "|");
+										T_Live_Fire_Alarm[tmpArray[1]] = msgArray[i];
+									}
+									update_fire_alarm_table();
 								}
-								update_fire_alarm_table();
+							} else {
+								clear_all_fire_alarm();
 							}
 						},
 						"error": function (t) {
@@ -308,7 +334,7 @@ function destoy_elements(T_Object_List) {
 	foreach(var item in vpairs(table.keys(T_Object_List))) {
 		if (T_Object_List[item] != null) {
 			T_Object_List[item].destroy();
-			
+
 		}
 	}
 }
@@ -322,21 +348,20 @@ function destory_element_by_name(T_Object_List, objName) {
 	}
 }
 
-function stop_all_flash(){
+function stop_all_flash() {
 	foreach(var item in vpairs(table.keys(T_Live_Fire_Alarm))) {
 		var obj = object.find(item);
 		if (obj != null) {
-			obj.setColorFlash(false);		
+			obj.setColorFlash(false);
 		}
 	}
 	foreach(var item in vpairs(table.keys(T_Live_Gas_Alarm))) {
 		var obj = object.find(item);
 		if (obj != null) {
-			obj.setColorFlash(false);		
+			obj.setColorFlash(false);
 		}
 	}
 }
-
 
 gui.createButton("Reset", Rect(40, 260, 60, 30), function () {
 	util.clearAllTimers();
@@ -346,7 +371,6 @@ gui.createButton("Reset", Rect(40, 260, 60, 30), function () {
 	destoy_elements(T_Banner_List);
 	destoy_elements(T_Fire_List);
 	destoy_elements(T_Gas_List);
-
 
 	camera.flyTo({
 		"eye": Vector3(-80, 80, -50),
