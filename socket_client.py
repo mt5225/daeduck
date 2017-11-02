@@ -93,7 +93,8 @@ def init_db():
     SQL = '''
         CREATE TABLE IF NOT EXISTS alarms (
             occurrences varchar(64),
-            sensor varchar(64)
+            sensor varchar(64),
+            status varchar(64)
         );
     '''
     with sqlite3.connect('daeduck_fire.db') as conn:
