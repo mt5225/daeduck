@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sqlite3
 import logging
 import sys
 from flask import Flask, jsonify
@@ -12,17 +11,19 @@ import pandas as pd
 
 DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
 #DB_URL = 'mssql+pyodbc://cctv:1qaz2wsx!@#$@192.168.6.101:1433/DDEMS?driver=SQL+Server+Native+Client+11.0'
+MYSQL_DB_URL = 'mysql+mysqldb://root:root@192.168.33.10/daeduck_alarm_momoda'
+#MYSQL_DB_URL = 'mysql+mysqldb://root:root@localhost/daeduck_alarm_momoda'
 DUMMY_FIRE = 'F100311'
 
 # innit flash app and backend db connection
 app = Flask(__name__, static_url_path='', static_folder='static')
-# fire db (sqlite3)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///daeduck_fire.db'
 # gas db (mysql)
 app.config['SQLALCHEMY_BINDS'] = {
     'gas': DB_URL,
+    'fire': MYSQL_DB_URL
 }
-db = SQLAlchemy(app)
+
+_DB = SQLAlchemy(app)
 
 # init lookup map
 _FIRE_LOOKUP = pd.read_csv('fire_building_mapping.csv', dtype={'ID': object})
@@ -45,14 +46,17 @@ def dummy_fire():
 def clean_fire():
     ''' clear all fire alarms
     '''
-    db.engine.execute("delete from alarms")
+    engine = _DB.get_engine(bind='fire')
+    engine.execute("delete from fire_alarms")
     return 'Ready', 200
 
 
 @app.route('/fire', methods=['GET'])
 def fire():
     msg_array = []
-    result = db.engine.execute("SELECT * FROM alarms ORDER BY ROWID")
+    engine = _DB.get_engine(bind='fire')
+    today_str = strftime("%Y-%m-%d", gmtime())
+    result = engine.execute("SELECT occurrences,sensor,status FROM fire_alarms where locate('%s', occurrences)>0" % today_str)
     for row in result:
         # remove letter F from sensor id
         sensor_id = row[1][1:]
@@ -72,8 +76,9 @@ def fire():
 @app.route('/gas', methods=['GET'])
 def gas():
     msg_array = []
-    query_str = 'select POINT_NM,FILE_NM,CURR_DT from UVW_POINTINFO_for_cctv where ALARM_YN = 1 ORDER BY CURR_DT desc'
-    engine = db.get_engine(bind='gas')
+    today_str = strftime("%Y-%m-%d", gmtime())
+    query_str = "select POINT_NM,FILE_NM,CURR_DT from UVW_POINTINFO_for_cctv where ALARM_YN = 1 AND CHARINDEX('%s', CURR_DT) != 0 ORDER BY CURR_DT desc" % today_str
+    engine = _DB.get_engine(bind='gas')
     result = engine.execute(query_str)
     for record in result:
         app.logger.debug('row = %r' % record)
@@ -114,4 +119,4 @@ if __name__ == '__main__':
     handler.setFormatter(formatter)
     app.logger.addHandler(handler)
     CORS(app)
-    app.run(host='0.0.0.0', port=9006, debug=True)
+    app.run(host='0.0.0.0', port=9006, debug=True, threaded=True)

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import socket
-import sqlite3
 import sys
 import binascii
 import logging
@@ -9,6 +8,7 @@ import datetime
 from time import gmtime, strftime
 from logging.handlers import RotatingFileHandler
 from apscheduler.schedulers.background import BackgroundScheduler
+import MySQLdb
 
 # ======= create logger ==========
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -25,6 +25,11 @@ _PORT = 4378
 _RECV_TIMEOUT = 1 * 10
 _SOCK_POLLING = _RECV_TIMEOUT + 1
 _CLEAN_DB_PERIOD = 20 * 60
+
+_DB = MySQLdb.connect(host="192.168.33.10",  # your host 
+                     user="root",       # username
+                     passwd="root",     # password
+                     db="daeduck_alarm_momoda")   # name of the database
 
 def get_sensor_id(msg):
     sensor_id_hex = msg[24:36]
@@ -75,40 +80,14 @@ def save_to_db(payload):
     ''' save message to db
     '''
     try:
-        conn = sqlite3.connect('daeduck_fire.db')
-        cur = conn.cursor()
+        cur = _DB.cursor()
         for item in payload:
             record = (item['occurrences'], item['sensor'], item['status'])
-            cur.execute("INSERT INTO alarms VALUES(?,?,?)", record)
-        conn.commit()
-    except sqlite3.Error, e:
+            cur.execute("INSERT INTO fire_alarms (occurrences, sensor, status) VALUES(%s,%s,%s)", record)
+        _DB.commit()
+    except MySQLdb.Error, e:
         logging.error("Error %s:" % e.args[0])
         sys.exit(1)
-    finally:
-        if conn:
-            conn.close()
-
-# ======= init database =======
-def init_db():
-    SQL = '''
-        CREATE TABLE IF NOT EXISTS alarms (
-            occurrences varchar(64),
-            sensor varchar(64),
-            status varchar(64)
-        );
-    '''
-    with sqlite3.connect('daeduck_fire.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute(SQL)
-
-# ======= init database =======
-def remove_old_event():
-    ''' remove all events from alarms table
-    '''
-    logger.debug('clean old event')
-    with sqlite3.connect('daeduck_fire.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute('DELETE from alarms')
 
 # ======= fetch data from socket server =======
 def fetch_data():
@@ -133,16 +112,11 @@ def fetch_data():
     finally:	
         s.close()
 
-
-
 if __name__ == '__main__':
    ''' argument: clearn up event db in N minutes
    '''
-   init_db()
    scheduler = BackgroundScheduler()
    start_time = datetime.datetime.now() + datetime.timedelta(0,3)
-   # add clean db job
-   scheduler.add_job(remove_old_event, 'interval', seconds=_CLEAN_DB_PERIOD, start_date=start_time)
    # add fetch data job
    scheduler.add_job(fetch_data, 'interval', seconds=_SOCK_POLLING, start_date=start_time)
    # start job scheduler
