@@ -10,10 +10,11 @@
     <script src="js/bootstrap.min.js"></script>
 </head>
 <script>
+    var BASE_URL = "http://192.168.86.24:9006/"
     $(document).ready(function () {
         $("#fire").click(function () {
             $.ajax({
-                url: "http://192.168.86.24:9006/dummy_fire",
+                url: BASE_URL + "command/fire",
                 success: function (result) {
                     $("#result").html(result);
                 }
@@ -22,7 +23,7 @@
 
         $("#reset").click(function () {
             $.ajax({
-                url: "http://192.168.86.24:9006/clear_fire_alarm",
+                url: BASE_URL + "command/recovery",
                 success: function (result) {
                     $("#result").html(result);
                 }

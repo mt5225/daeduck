@@ -6,14 +6,13 @@ from logging.handlers import RotatingFileHandler
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from types import NoneType
-from time import gmtime, strftime
+from datetime import datetime, timedelta
 import pandas as pd
 
 DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
 #DB_URL = 'mssql+pyodbc://cctv:1qaz2wsx!@#$@192.168.6.101:1433/DDEMS?driver=SQL+Server+Native+Client+11.0'
 MYSQL_DB_URL = 'mysql+mysqldb://root:root@192.168.33.10/daeduck_alarm_momoda'
-#MYSQL_DB_URL = 'mysql+mysqldb://root:root@localhost/daeduck_alarm_momoda'
-DUMMY_FIRE = 'F100311'
+DUMMY_FIRE = 'F99999'
 
 # innit flash app and backend db connection
 app = Flask(__name__, static_url_path='', static_folder='static')
@@ -34,41 +33,35 @@ _GAS_CCTV_LOOKUP = pd.read_csv('gas_cctv_mapping.csv', dtype={'ID': object})
 def index():
     return jsonify(msg='Hello, Daeduck!'), 200
 
-@app.route('/dummy_fire', methods=['GET'])
-def dummy_fire():
+@app.route('/command/<status>', methods=['GET'])
+def dummy_fire(status):
     ''' create a test fire alarm
     '''
-    occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-    db.engine.execute("INSERT INTO alarms VALUES ('%s', '%s')" % (occr, DUMMY_FIRE))
-    return 'Fire', 200
-
-@app.route('/clear_fire_alarm', methods=['GET'])
-def clean_fire():
-    ''' clear all fire alarms
-    '''
+    occr = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     engine = _DB.get_engine(bind='fire')
-    engine.execute("delete from fire_alarms")
-    return 'Ready', 200
+    engine.execute("INSERT INTO fire_alarms (occurrences,sensor,status) VALUES ('%s', '%s', '%s')" % (occr, DUMMY_FIRE, status))
+    return status, 200
 
 
 @app.route('/fire', methods=['GET'])
 def fire():
     msg_array = []
     engine = _DB.get_engine(bind='fire')
-    today_str = strftime("%Y-%m-%d", gmtime())
-    result = engine.execute("SELECT occurrences,sensor,status FROM fire_alarms where locate('%s', occurrences)>0" % today_str)
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    yesterday_str = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    result = engine.execute("SELECT occurrences,sensor,status FROM fire_alarms where locate('%s', occurrences)>0 OR locate('%s', occurrences)>0" % (today_str, yesterday_str))
     for row in result:
         # remove letter F from sensor id
         sensor_id = row[1][1:]
         app.logger.debug("look for location info of fire sensor %s" % sensor_id)
         # get floor and building info
-        df = _FIRE_LOOKUP.loc[_FIRE_LOOKUP['ID'] == sensor_id]
-        location_info = "%s_%s" % (df.iloc[0].Building, df.iloc[0].Floor)
-        # get cctv info
-        df = _FIRE_CCTV_LOOKUP.loc[_FIRE_CCTV_LOOKUP['ID'] == sensor_id]
-        cctv_info = "%s_%s_%s_%s" % (df.iloc[0].CCTV1, df.iloc[0].CCTV2, df.iloc[0].CCTV3,df.iloc[0].CCTV4)
-        status = row[2]
-        msg_array.append("%s|%s|%s|%s|%s"% (row[0], row[1], location_info, cctv_info, status))
+        location_df = _FIRE_LOOKUP.loc[_FIRE_LOOKUP['ID'] == sensor_id]
+        cctv_df = _FIRE_CCTV_LOOKUP.loc[_FIRE_CCTV_LOOKUP['ID'] == sensor_id]
+        if len(location_df.index > 0) and len(cctv_df.index > 0):
+            location_info = "%s_%s" % (location_df.iloc[0].Building, location_df.iloc[0].Floor)
+            cctv_info = "%s_%s_%s_%s" % (cctv_df.iloc[0].CCTV1, cctv_df.iloc[0].CCTV2, cctv_df.iloc[0].CCTV3,cctv_df.iloc[0].CCTV4)
+            status = row[2]
+            msg_array.append("%s|%s|%s|%s|%s"% (row[0], row[1], location_info, cctv_info, status))
     app.logger.debug(msg_array)
     msg_short = '#'.join(msg_array) if msg_array > 0 else ""
     return msg_short, 200
@@ -76,13 +69,16 @@ def fire():
 @app.route('/gas', methods=['GET'])
 def gas():
     msg_array = []
-    today_str = strftime("%Y-%m-%d", gmtime())
-    query_str = "select POINT_NM,FILE_NM,CURR_DT from UVW_POINTINFO_for_cctv where ALARM_YN = 1 AND CHARINDEX('%s', CURR_DT) != 0 ORDER BY CURR_DT desc" % today_str
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    yesterday_str = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    query_str = "select POINT_NM,FILE_NM,CURR_DT from UVW_POINTINFO_for_cctv where ALARM_YN = 1 AND ( CHARINDEX('%s', CURR_DT) != 0 OR CHARINDEX('%s', CURR_DT) != 0) ORDER BY CURR_DT desc" % (today_str, yesterday_str)
     engine = _DB.get_engine(bind='gas')
     result = engine.execute(query_str)
     for record in result:
         app.logger.debug('row = %r' % record)
-        msg_array.append(get_leak_detail(record))
+        sensor_detail = get_leak_detail(record)
+        if sensor_detail is not "":
+            msg_array.append(sensor_detail) 
     msg_short = ""
     if msg_array:
         msg_short = '#'.join(msg_array)
@@ -104,9 +100,11 @@ def get_leak_detail(record):
     sensor_id_lookup = "%s-%s" % (tmp[1].strip(), second)
     app.logger.debug('sensor_lookup_id = %s' % sensor_id_lookup)
     df = _GAS_CCTV_LOOKUP.loc[_GAS_CCTV_LOOKUP['ID'] == sensor_id_lookup]
-    cctv_info = "%s_%s_%s_%s" % (df.iloc[0].CCTV1, df.iloc[0].CCTV2, df.iloc[0].CCTV3,df.iloc[0].CCTV4)
-    sensor_detail = "%s|%s|%s|%s" % (occr, sensor_id,location_info, cctv_info)
-    app.logger.debug(sensor_detail)
+    sensor_detail = ""
+    if len(df.index > 0):
+        cctv_info = "%s_%s_%s_%s" % (df.iloc[0].CCTV1, df.iloc[0].CCTV2, df.iloc[0].CCTV3,df.iloc[0].CCTV4)
+        sensor_detail = "%s|%s|%s|%s" % (occr, sensor_id,location_info, cctv_info)
+        app.logger.debug(sensor_detail)
     return sensor_detail
 
 if __name__ == '__main__':
