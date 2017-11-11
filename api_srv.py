@@ -69,9 +69,7 @@ def fire():
 @app.route('/gas', methods=['GET'])
 def gas():
     msg_array = []
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    yesterday_str = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    query_str = "select POINT_NM,FILE_NM,CURR_DT from UVW_POINTINFO_for_cctv where ALARM_YN = 1 AND ( CHARINDEX('%s', CURR_DT) != 0 OR CHARINDEX('%s', CURR_DT) != 0) ORDER BY CURR_DT desc" % (today_str, yesterday_str)
+    query_str = "select POINT_NM,FILE_NM,CURR_DT from UVW_POINTINFO_for_cctv where ALARM_YN = 1 ORDER BY CURR_DT desc"
     engine = _DB.get_engine(bind='gas')
     result = engine.execute(query_str)
     for record in result:
@@ -92,8 +90,7 @@ def get_leak_detail(record):
     second = tmp[0][2] if tmp[0][:2] == '00' else tmp[0][1:].strip()  
     sensor_id = "leak%s-%s" % (tmp[1].strip(), second)
     app.logger.debug('sensor_id = %s' % sensor_id)
-    occr = record[2]
-    #occr = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    occr = record[2][:-4]
     # get location info
     location_info = "P2%s" %  record[1][4:][:-4]
     # get cctv info

@@ -15,15 +15,19 @@ insert into fire_alarms (occurrences, sensor, status) values ('2017-11-09 05:31:
 
 insert into fire_alarms (occurrences, sensor, status) values ('2017-11-09 05:31:38', 'F101141', 'recovery');
 
-insert into fire_alarms (occurrences, sensor, status) values ('2017-11-09 05:31:38', 'F101111', 'fire');
+insert into fire_alarms (occurrences, sensor, status) values ('2017-11-11 05:31:38', 'F101111', 'fire');
 
-insert into fire_alarms (occurrences, sensor, status) values ('2017-11-09 05:31:38', 'F101111', 'recovery');
+insert into fire_alarms (occurrences, sensor, status) values ('2017-11-11 05:31:38', 'F101111', 'recovery');
 
 insert into fire_alarms (occurrences, sensor, status) values ('2017-11-09 05:31:38', 'F000000', 'recovery');
 
 insert into fire_alarms (occurrences, sensor, status) values ('2017-11-09 05:31:38', 'F', 'recovery');
 
+insert into fire_alarms (occurrences, sensor, status) values ('2017-11-11 05:31:38', 'F99999', 'fire');
+
 
 -- -------
 -- for gas alarms
 -- -------
+
+
