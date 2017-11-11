@@ -133,11 +133,10 @@ function fly_to_sensor_level(sensorObj) {
 			"target": sensorObj.pos,
 			"time": 1,
 			"complete": function () {
-				LISTENING = false;
 				util.setTimeout(function () {
 					CURRENT_LEVEL = 'world';
 					level.change(world);
-				}, 500);
+				}, 1000);
 			}
 		});
 	} else {
