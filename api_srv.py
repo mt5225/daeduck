@@ -9,9 +9,10 @@ from types import NoneType
 from datetime import datetime, timedelta
 import pandas as pd
 
-DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
-#DB_URL = 'mssql+pyodbc://cctv:1qaz2wsx!@#$@192.168.6.101:1433/DDEMS?driver=SQL+Server+Native+Client+11.0'
-MYSQL_DB_URL = 'mysql+mysqldb://root:root@192.168.33.10/daeduck_alarm_momoda'
+#DB_URL = 'mssql+pyodbc://admin:admin@192.168.86.58:1433/master?driver=FreeTDS'
+DB_URL = 'mssql+pyodbc://cctv:1qaz2wsx!@#$@192.168.6.101:1433/DDEMS?driver=SQL+Server+Native+Client+11.0'
+#MYSQL_DB_URL = 'mysql+mysqldb://root:root@192.168.33.10/daeduck_alarm_momoda'
+MYSQL_DB_URL = 'mysql+mysqldb://root:1234@192.168.236.1/daeduck_alarm_momoda'
 DUMMY_FIRE = 'F99999'
 
 # innit flash app and backend db connection
@@ -21,6 +22,7 @@ app.config['SQLALCHEMY_BINDS'] = {
     'gas': DB_URL,
     'fire': MYSQL_DB_URL
 }
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 _DB = SQLAlchemy(app)
 

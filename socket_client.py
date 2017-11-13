@@ -18,7 +18,7 @@ handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s -
 logger.addHandler(handler)
 
 # ======= global settings ========
-#_HOST = '192.168.0.150'
+#_HOST = '10.10.0.220'
 _HOST = 'localhost'
 _PORT = 4378
 # all time value are in seconds
@@ -30,6 +30,11 @@ _DB = MySQLdb.connect(host="192.168.33.10",  # your host
                      user="root",       # username
                      passwd="root",     # password
                      db="daeduck_alarm_momoda")   # name of the database
+
+# _DB = MySQLdb.connect(host="192.168.236.1",  # your host 
+#                      user="root",       # username
+#                      passwd="1234",     # password
+#                      db="daeduck_alarm_momoda")   # name of the database
 
 def get_sensor_id(msg):
     sensor_id_hex = msg[24:36]
